@@ -24,9 +24,17 @@ if (isset($_GET['delete'])) {
     $prod = $stmt->fetch();
 
     if ($prod && $prod['quantite'] == 0) {
-        $stmt = $pdo->prepare("DELETE FROM produits WHERE reference = ?");
-        $stmt->execute([$ref]);
-        $_SESSION['toast'] = __t('product_deleted');
+        try {
+            $stmt = $pdo->prepare("DELETE FROM produits WHERE reference = ?");
+            $stmt->execute([$ref]);
+            $_SESSION['toast'] = __t('product_deleted');
+        } catch (PDOException $e) {
+            if ($e->getCode() == 23000) {
+                $_SESSION['toast'] = __t('cannot_delete_linked');
+            } else {
+                $_SESSION['toast'] = "Erreur: " . $e->getMessage();
+            }
+        }
     } else {
         $_SESSION['toast'] = __t('cannot_delete');
     }
